@@ -109,16 +109,16 @@ def main():
     import parsesrt
 
     subtitlewriter = SubtitleWriter( font, fontsize, fillcolor, outlinecolor,
-                                     outlinewidth, resolution ) 
+                                     outlinewidth, resolution )
     if not subtitlewriter.open(outputfilename):
-        print("Failed to open %s" %( subtitlewriter.outputfile ))
+        print("Failed to open %s" %( subtitlewriter.outfile.name ))
         return 1
     if not parsesrt.parse( inputfile, subtitlewriter ):
         print("Failed to parse %s" %( inputfilename ))
     if inputfilename != "stdin":
         inputfile.close()
     if not subtitlewriter.close():
-        print("Failed to write to %s after parsing" %( subtitlewriter.outputfile ))
+        print("Failed to write to %s after parsing" %( subtitlewriter.outfile.name ))
         return 1
     return 0
 

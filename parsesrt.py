@@ -44,7 +44,7 @@ def parse( file, writer ):
                 linecount += 1
                 lines += buf
             else:
-                print "Writing subtitle %s" %(number)
+                print("Writing subtitle %s" %(number))
                 if not writer.write( number, starttime, endtime, lines ):
                     return False
                 state = READNUMBER

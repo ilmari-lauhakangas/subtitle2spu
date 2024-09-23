@@ -16,24 +16,19 @@ class SubtitleWriter:
                 outlinewidth: Width of the texts' outline
                 resolution: Resolution of the movie
         """
-        # Template for convert command
-        self.convert = (
-            "convert -size %(resolution)s xc:none " +
-            "-fill %(fillcolor)s -stroke %(strokecolor)s " +
-            "-strokewidth %(strokewidth)s -font %(fontname)s " +
-            "-pointsize %(fontsize)s +antialias -colors 4 -gravity south "
-        ) % {
-            "resolution": resolution,
-            "fillcolor": fillcolor,
-            "strokecolor": outlinecolor,
-            "strokewidth": outlinewidth,
-            "fontname": font,
-            "fontsize": fontsize
-        } + "-draw \"text 0,10 '%(subtext)s'\" %(filename)s"
+        # Template for magick command
+        self.magick = (
+            f"magick -size {resolution} xc:\"#808080\" " +
+            "-gravity south " +
+            f"-fill {fillcolor} -stroke {outlinecolor} -strokewidth 1.2 " +
+            f"-font {font} " +
+            f"-pointsize {fontsize} -gravity south "
+        )
+        self.subtext_filename = "-annotate 0 '%(subtext)s' '%(filename)s'"
 
         # Template for xml subtitle item
         self.spunode = (
-            "\t<spu start=\"%(starttime)s\" end=\"%(endtime)s\" " +
+            "\t<spu transparent=\"#808080\" start=\"%(starttime)s\" end=\"%(endtime)s\" " +
             "image=\"%(filename)s\" />\n"
         )
         
@@ -64,7 +59,7 @@ class SubtitleWriter:
         return True
 
     def write( self, number, starttime, endtime, text,
-               filename="subtitle_%s.png" ):   
+               filename="subtitle_" ):
         """ Writer function that parsers should call
     
             Parameters:
@@ -78,18 +73,19 @@ class SubtitleWriter:
                 False otherwise
         """
         # Fill in the templates
-        command = self.convert % {
+        pngfilename = f"{os.path.dirname(os.path.abspath(self.outfile.name))}/{filename}{number}"
+        command = self.magick + self.subtext_filename % {
             "subtext": text.replace( "\'", "\\\'" ).replace( "\"", "\\\"" ),
-            "filename": filename % number
-        }
+            "filename": f"{pngfilename}.png"
+        } + f" && magick '{pngfilename}.png' +dither -type palette -remap /tmp/palette.png '{pngfilename}.png'"
 
         node = self.spunode % {
             "starttime": starttime,
             "endtime": endtime,
-            "filename": filename % number
+            "filename": f"{pngfilename}.png"
         }
         
-        print command
+        print(command)
         os.system( command )
         try:
             self.outfile.write( node )
